@@ -1,8 +1,6 @@
 import os
 import random
 import pickle
-from typing import Optional, Sequence
-
 import torch
 import torchvision
 import numpy as np
@@ -10,13 +8,9 @@ import scipy.special
 from torch import nn, optim, Tensor
 from torch.nn import functional as F
 from torch.autograd import Variable
-from torch.utils.data.dataset import Dataset
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 import torchvision.models as models
-from collections import namedtuple
-from mpl_toolkits.axisartist.parasite_axes import HostAxes, ParasiteAxes
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 import models.resnet_cifar10 as resnet
@@ -285,6 +279,27 @@ class ECE(nn.Module):
         self.bin_lowers = bin_boundaries[:-1]
         self.bin_uppers = bin_boundaries[1:]
 
+    def histogram(self, logits, labels):
+        softmaxes = F.softmax(logits, dim=1)
+        confidences, predictions = torch.max(softmaxes, 1)
+        accuracies = predictions.eq(labels)
+
+        bin_acc = []
+        conf_axis = []
+        ece = torch.zeros(1, device=logits.device)
+        for bin_lower, bin_upper in zip(self.bin_lowers, self.bin_uppers):
+            in_bin = confidences.gt(bin_lower.item()) * confidences.le(bin_upper.item())
+            prop_in_bin = in_bin.float().mean()
+            if prop_in_bin.item() > 0:
+                accuracy_in_bin = accuracies[in_bin].float().mean()
+                bin_acc.append(accuracy_in_bin.item())
+                avg_confidence_in_bin = confidences[in_bin].mean()
+                ece += torch.abs(avg_confidence_in_bin - accuracy_in_bin) * prop_in_bin
+            else:
+                bin_acc.append(0.0)
+            conf_axis.append((bin_upper.item()+bin_lower.item())/2)
+        return bin_acc, conf_axis, ece.item()
+
     def forward(self, logits, labels):
         softmaxes = F.softmax(logits, dim=1)
         confidences, predictions = torch.max(softmaxes, 1)
@@ -484,68 +499,83 @@ def load_model(name, data, pretrained=True):
         return get_regnet_y_400mf()
 
 
-def get_resnet110_cifar100(pretrained=True):
-    if pretrained is True:
-        model = resnet.resnet110(num_classes=100)
-        model_path = './saved_models/resnet110-cifar100-7415.pt'
-        checkpoint = torch.load(model_path)
+def get_resnet110_cifar100(checkpoint_path=None):
+    model = resnet.resnet110(num_classes=100)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
         model.load_state_dict(checkpoint)
-        print('load model successfully')
-    else:
-        model = resnet.resnet110(num_classes=100)
+    print('load model successfully')
     return model
 
-def get_resnet110_cifar10():
+def get_resnet110_cifar10(checkpoint_path=None):
     model = resnet.resnet110(num_classes=10)
-    model_path = 'saved_models/resnet110-cifar10-9325.pt'
-    checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_wide_resnet_40_10_cifar100():
+def get_wide_resnet_40_10_cifar100(checkpoint_path=None):
     model = wrn.wideresnet()
-    model_path = 'saved_models/wide_resnet_40_10.pt'
-    checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_densenet_121_cifar100():
+def get_densenet_121_cifar100(checkpoint_path=None):
     model = dense_net.densenet121()
-    model_path = 'saved_models/densenet121.pt'
-    checkpoint = torch.load(model_path)
-    model.load_state_dict(checkpoint)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_resnet101_imagenet():
+def get_resnet101_imagenet(checkpoint_path=None):
     model = models.resnet101(pretrained=True)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_vit_b16_imagenet():
+def get_vit_b16_imagenet(checkpoint_path=None):
     model = models.vit_b_16(pretrained=True)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_convnext_tiny_imagenet():
+def get_convnext_tiny_imagenet(checkpoint_path=None):
     model = models.convnext_tiny(pretrained=True)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_efficientnet_b0_imagenet():
+def get_efficientnet_b0_imagenet(checkpoint_path=None):
     model = models.efficientnet_b0(pretrained=True)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_wide_resnet50_2_imagent():
+def get_wide_resnet50_2_imagent(checkpoint_path=None):
     model = models.wide_resnet50_2(pretrained=True)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 
-def get_regnet_y_400mf():
+def get_regnet_y_400mf(checkpoint_path=None):
     model = models.regnet_y_400mf(pretrained=True)
+    if checkpoint_path is not None:
+        checkpoint = torch.load(checkpoint_path)
+        model.load_state_dict(checkpoint)
     print('load model successfully')
     return model
 

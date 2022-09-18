@@ -6,7 +6,7 @@ from torch.autograd import Variable
 from utils import ECE, Entropy, SCE, AdaptiveECE, FocalLoss
 
 
-class ModelWithNeuralClamping(nn.Module):
+class NCWrapper(nn.Module):
     """
         A decorator, which wraps a model with neural clamping
         Neural Clamping: Joint Input Perturbation and Temperature Scaling for Neural Network Calibration
@@ -28,7 +28,7 @@ class ModelWithNeuralClamping(nn.Module):
     def __init__(self, model,
                  lambda_0=1, lambda_1=1, image_size=(3, 32, 32), init_scale=0.01, dropout_p=0.0, init_temp=1,
                  num_classes=10, device_ids=[]):
-        super(ModelWithNeuralClamping, self).__init__()
+        super(NCWrapper, self).__init__()
         self.model = model
         self.dropout = nn.Dropout(p=dropout_p)
         self.perturbation = nn.Parameter(torch.randn(size=image_size)*init_scale, requires_grad=True)

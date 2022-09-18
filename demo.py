@@ -1,5 +1,5 @@
-from NeuralClamping import ModelWithNeuralClamping
-from utils import load_model, load_dataset, model_classes, seed, setup_device
+from neural_clamping.nc_wrapper import NCWrapper
+from neural_clamping.utils import load_model, load_dataset, model_classes, setup_device
 
 
 # config
@@ -31,15 +31,15 @@ valloader = load_dataset(data=data, split='val', batch_size=batch_size)
 testloader = load_dataset(data=data, split='test', batch_size=batch_size)
 
 # build Neural Clamping framework
-nc = ModelWithNeuralClamping(model=model,
-                             lambda_0=lambda_0,
-                             lambda_1=lambda_1,
-                             dropout_p=dropout_p,
-                             init_scale=init_scale,
-                             init_temp=init_temp,
-                             image_size=image_size,
-                             num_classes=num_classes,
-                             device_ids=device_ids)
+nc = NCWrapper(model=model,
+               lambda_0=lambda_0,
+               lambda_1=lambda_1,
+               dropout_p=dropout_p,
+               init_scale=init_scale,
+               init_temp=init_temp,
+               image_size=image_size,
+               num_classes=num_classes,
+               device_ids=device_ids)
 # training
 result = nc.train_NC(val_loader=valloader, epoch=epoch, lr=lr, focal_loss=focal_loss, gamma=gamma)
 
