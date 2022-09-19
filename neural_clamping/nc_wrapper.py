@@ -3,7 +3,7 @@ import numpy as np
 from torch import nn, optim
 from torch.autograd import Variable
 
-from utils import ECE, Entropy, SCE, AdaptiveECE, FocalLoss
+from .utils import ECE, Entropy, SCE, AdaptiveECE, FocalLoss
 
 
 class NCWrapper(nn.Module):
@@ -25,15 +25,15 @@ class NCWrapper(nn.Module):
         Loss Function:
             lambda_0 * NLL/FocalLoss + lambda_1 * regularization
     """
-    def __init__(self, model,
+    def __init__(self, model, num_classes=10,
                  lambda_0=1, lambda_1=1, image_size=(3, 32, 32), init_scale=0.01, dropout_p=0.0, init_temp=1,
-                 num_classes=10, device_ids=[]):
+                 device_ids=[]):
         super(NCWrapper, self).__init__()
         self.model = model
         self.dropout = nn.Dropout(p=dropout_p)
         self.perturbation = nn.Parameter(torch.randn(size=image_size)*init_scale, requires_grad=True)
         self.perturbation.requires_grad = True
-        self.temperature = torch.tensor(torch.ones(1) * init_temp)
+        self.temperature = torch.ones(1) * init_temp
         self.temperature = nn.Parameter(self.temperature.requires_grad_())
         self.lambda_0 = lambda_0
         self.lambda_1 = lambda_1
@@ -329,3 +329,31 @@ class NCWrapper(nn.Module):
         print('set delta initial value successfully')
         return None
 
+    def reliability_diagram(self, test_loader, rd_criterion, n_bins=15):
+        self.model.eval()
+        self.cuda()
+
+        if rd_criterion == 'ECE':
+            rd_criterion = ECE(n_bins=n_bins).cuda()
+        else:
+            raise NotImplementedError()
+
+        logits_arr, labels_arr = None, None
+        correct = 0
+
+        with torch.no_grad():
+            for data in test_loader:
+                # load input datas and its labels
+                inputs, labels = data[0].cuda(), data[1].cuda()
+
+                # inference
+                logits = self.temperature_scale(self.model(inputs + self.perturbation))
+
+                logits_arr = torch.cat((logits_arr, logits.cpu().detach()),
+                                       0) if logits_arr is not None else logits.cpu().detach()
+                labels_arr = torch.cat((labels_arr, labels.cpu().detach()),
+                                       0) if labels_arr is not None else labels.cpu().detach()
+                pred = logits.max(1, keepdim=True)[1]
+                correct += pred.eq(labels.view_as(pred)).sum().item()
+
+        return rd_criterion.histogram(logits_arr, labels_arr)

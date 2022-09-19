@@ -13,9 +13,9 @@ from torchvision.datasets import ImageFolder
 import torchvision.models as models
 from tqdm import tqdm
 
-import models.resnet_cifar10 as resnet
-import models.wide_resnet as wrn
-import models.densenet as dense_net
+from .models import resnet_cifar10 as resnet
+from .models import wide_resnet as wrn
+from .models import densenet as dense_net
 
 
 """ Setup """
@@ -126,8 +126,9 @@ imagenet_transform_test = transforms.Compose([
 ])
 
 """ Dataset """
-def load_dataset(data, split, batch_size=1000, image_size=224, aug=True):
+def load_dataset(data, split, dataset_path='./data', batch_size=1000, image_size=224, aug=True):
     """
+    :param dataset_path:
     :param data:
     :param split:
     :param batch_size:
@@ -137,109 +138,120 @@ def load_dataset(data, split, batch_size=1000, image_size=224, aug=True):
     """
     if data == 'CIFAR-10':
         if split == 'train':
-            return get_cifar10_train_loader(batch_size=batch_size, aug=aug)
+            return get_cifar10_train_loader(root=dataset_path, batch_size=batch_size, aug=aug)
         elif split == 'val':
-            return get_cifar10_val_loader(batch_size=batch_size, aug=aug)
+            return get_cifar10_val_loader(root=dataset_path, batch_size=batch_size, aug=aug)
         elif split == 'test':
-            return get_cifar10_test_loader(batch_size=batch_size)
+            return get_cifar10_test_loader(root=dataset_path, batch_size=batch_size)
     elif data == 'CIFAR-100':
         if split == 'train':
-            return get_cifar100_train_loader(batch_size=batch_size, aug=aug)
+            return get_cifar100_train_loader(root=dataset_path, batch_size=batch_size, aug=aug)
         elif split == 'val':
-            return get_cifar100_val_loader(batch_size=batch_size, aug=aug)
+            return get_cifar100_val_loader(root=dataset_path, batch_size=batch_size, aug=aug)
         elif split == 'test':
-            return get_cifar100_test_loader(batch_size=batch_size)
+            return get_cifar100_test_loader(root=dataset_path, batch_size=batch_size)
     elif data == 'ImageNet':
         if split == 'val':
-            return get_imagenet_val_loader(batch_size=batch_size, aug=aug)
+            return get_imagenet_val_loader(root=dataset_path, batch_size=batch_size, aug=aug)
         elif split == 'test':
-            return get_imagenet_test_loader(batch_size=batch_size)
+            return get_imagenet_test_loader(root=dataset_path, batch_size=batch_size)
 
 # cifar10 train dataset
-def get_cifar10_train_loader(batch_size, aug=True):
+def get_cifar10_train_loader(root, batch_size, aug=True):
     if aug is True:
         trainset = torchvision.datasets.CIFAR10(
-            root='./data', train=True, download=True, transform=cifar10_transform_train)
+            root=root, train=True, download=True, transform=cifar10_transform_train)
     else:
         trainset = torchvision.datasets.CIFAR10(
-            root='./data', train=True, download=True, transform=cifar10_transform_test)
+            root=root, train=True, download=True, transform=cifar10_transform_test)
     trainset.data = trainset.data[:45000]
     trainset.targets = trainset.targets[:45000]
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=8)
     return trainloader
 
 # cifar10 validation dataset
-def get_cifar10_val_loader(batch_size, aug=True):
+def get_cifar10_val_loader(root, batch_size, aug=True):
     if aug is True:
         valset = torchvision.datasets.CIFAR10(
-            root='./data', train=True, download=True, transform=cifar10_transform_train)
+            root=root, train=True, download=True, transform=cifar10_transform_train)
     else:
         valset = torchvision.datasets.CIFAR10(
-            root='./data', train=True, download=True, transform=cifar10_transform_test)
+            root=root, train=True, download=True, transform=cifar10_transform_test)
     valset.data = valset.data[45000:]
     valset.targets = valset.targets[45000:]
     valloader = torch.utils.data.DataLoader(valset, batch_size=batch_size, shuffle=True, num_workers=8)
     return valloader
 
 # cifar10 test dataset
-def get_cifar10_test_loader(batch_size):
+def get_cifar10_test_loader(root, batch_size):
     testset = torchvision.datasets.CIFAR10(
-        root='./data', train=False, download=True, transform=cifar10_transform_test)
+        root=root, train=False, download=True, transform=cifar10_transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=8)
     return testloader
 
 # cifar100 train dataset
-def get_cifar100_train_loader(batch_size, aug=True):
+def get_cifar100_train_loader(root, batch_size, aug=True):
     if aug is True:
         trainset = torchvision.datasets.CIFAR100(
-            root='./data', train=True, download=True, transform=cifar100_transform_train)
+            root=root, train=True, download=True, transform=cifar100_transform_train)
     else:
         trainset = torchvision.datasets.CIFAR100(
-            root='./data', train=True, download=True, transform=cifar100_transform_test)
+            root=root, train=True, download=True, transform=cifar100_transform_test)
     trainset.data = trainset.data[:45000]
     trainset.targets = trainset.targets[:45000]
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=8)
     return trainloader
 
 # cifar 100 validation dataset
-def get_cifar100_val_loader(batch_size, aug=True):
+def get_cifar100_val_loader(root, batch_size, aug=True):
     if aug is True:
         valset = torchvision.datasets.CIFAR100(
-            root='./data', train=True, download=True, transform=cifar100_transform_train)
+            root=root, train=True, download=True, transform=cifar100_transform_train)
     else:
         valset = torchvision.datasets.CIFAR100(
-            root='./data', train=True, download=True, transform=cifar100_transform_test)
+            root=root, train=True, download=True, transform=cifar100_transform_test)
     valset.data = valset.data[45000:]
     valset.targets = valset.targets[45000:]
     valloader = torch.utils.data.DataLoader(valset, batch_size=batch_size, shuffle=True, num_workers=8)
     return valloader
 
 # cifar100 test dataset
-def get_cifar100_test_loader(batch_size):
+def get_cifar100_test_loader(root, batch_size):
     testset = torchvision.datasets.CIFAR100(
-        root='./data', train=False, download=True, transform=cifar100_transform_test)
+        root=root, train=False, download=True, transform=cifar100_transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=8)
     return testloader
 
 # imagenet dataset: 25k val images
-def get_imagenet_val_loader(batch_size, aug=True):
+def get_imagenet_val_loader(root, batch_size, aug=True):
     if aug is True:
-        dataset = ImageFolder(root=os.path.join('./data/imagenet', 'val'),
+        dataset = ImageFolder(root=os.path.join(root, 'val'),
                               transform=imagenet_transform_train)
     else:
-        dataset = ImageFolder(root=os.path.join('./data/imagenet', 'val'),
+        dataset = ImageFolder(root=os.path.join(root, 'val'),
                               transform=imagenet_transform_test)
     return torch.utils.data.DataLoader(
         dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
 # imagenet dataset: 25k test images
-def get_imagenet_test_loader(batch_size):
-    dataset = ImageFolder(root=os.path.join('./data/imagenet', 'test'),
+def get_imagenet_test_loader(root, batch_size):
+    dataset = ImageFolder(root=os.path.join(root, 'test'),
                           transform=imagenet_transform_test)
     return torch.utils.data.DataLoader(
         dataset=dataset, batch_size=batch_size, shuffle=False, num_workers=8)
 
+def download_gdrive(gdrive_id, fname_save):
+    try:
+        import gdown
+    except ModuleNotFoundError:
+        os.system('pip3 install gdown')
+        import gdown
 
+    print('Download started: path={} (gdrive_id={})'.format(
+        fname_save, gdrive_id))
+    gdown.download(id=gdrive_id, output=fname_save, quiet=False)
+    print('Download finished: path={} (gdrive_id={})'.format(
+        fname_save, gdrive_id))
 
 """ Metric """
 # entropy
@@ -476,25 +488,25 @@ def model_classes(data):
     elif 'ImageNet':
         return 1000
 
-def load_model(name, data, pretrained=True):
+def load_model(name, data, checkpoint_path=None):
     if name == 'ResNet-110' and data == 'CIFAR-100':
-        return get_resnet110_cifar100(pretrained=pretrained)
+        return get_resnet110_cifar100(checkpoint_path)
     elif name == 'ResNet-110' and data == 'CIFAR-10':
-        return get_resnet110_cifar10()
+        return get_resnet110_cifar10(checkpoint_path)
     elif name == 'WideResNet-40-10' and data == 'CIFAR-100':
-        return get_wide_resnet_40_10_cifar100()
+        return get_wide_resnet_40_10_cifar100(checkpoint_path)
     elif name == 'DenseNet-121' and data == 'CIFAR-100':
-        return get_densenet_121_cifar100()
+        return get_densenet_121_cifar100(checkpoint_path)
     elif name == 'ResNet-101' and data == 'ImageNet':
-        return get_resnet101_imagenet()
+        return get_resnet101_imagenet(checkpoint_path)
     elif name == 'ViT-B16' and data == 'ImageNet':
-        return get_vit_b16_imagenet()
+        return get_vit_b16_imagenet(checkpoint_path)
     elif name == 'ConvNeXt-T' and data == 'ImageNet':
-        return get_convnext_tiny_imagenet()
+        return get_convnext_tiny_imagenet(checkpoint_path)
     elif name == 'EfficientNet-B0' and data == 'ImageNet':
-        return get_efficientnet_b0_imagenet()
+        return get_efficientnet_b0_imagenet(checkpoint_path)
     elif name == 'WideResNet-50-2' and data == 'ImageNet':
-        return get_wide_resnet50_2_imagent()
+        return get_wide_resnet50_2_imagent(checkpoint_path)
     elif name == 'RegNetY-400MF' and data == 'ImageNet':
         return get_regnet_y_400mf()
 
@@ -653,3 +665,25 @@ def unpickle_probs(fname):
     probs = scipy.special.softmax(logits, 1)
     return probs, labels
 
+def plot_reliability_diagram(x, y):
+    import matplotlib.pyplot as plt
+    plt.figure(figsize=(9, 7), dpi=120)
+    plt.plot([0.0, 1.0], [0.0, 1.0], linestyle='dotted', color='#717171', alpha=0.6, label='Calibrated line')
+    plt.bar(x, x, width=0.05 if len(x) < 19 else 1.0/(len(x)+3), label='Expected', color='#fab6c4')
+    plt.bar(x, y, width=0.05 if len(x) < 19 else 1.0/(len(x)+3), label='Actual', color='#3838ff', alpha=0.5)
+    plt.xticks([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=18)
+    plt.xlim([0, 1.02])
+    plt.yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0], fontsize=18)
+    plt.ylim([0, 1.04])
+
+    plt.xlabel("Confidence", fontsize=18, labelpad=19)
+    plt.ylabel("Accuracy", fontsize=18, labelpad=19)
+
+    plt.title("Reliability diagram", fontsize=20, pad=20)
+
+    # Avoid repeat labels
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys(),
+               bbox_to_anchor=(1.04, 0), loc="lower left", borderaxespad=0, fontsize=20)
+    plt.show()

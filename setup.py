@@ -14,9 +14,10 @@ setuptools.setup(
     url="https://github.com/yungchentang/neural-clamping",
     packages=setuptools.find_packages(),
     install_requires=[
-        'torch==1.10.2',
-        'torchvision==0.11.3',
-        'requests>=2.23.0',
+        'torch',
+        'torchvision',
+        'matplotlib',
+        'requests',
         'numpy',
         'tqdm',
         'scipy',
