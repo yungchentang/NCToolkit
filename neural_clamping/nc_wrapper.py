@@ -329,6 +329,12 @@ class NCWrapper(nn.Module):
         print('set delta initial value successfully')
         return None
 
+    def restore_delta_and_temp(self, file):
+        delta_and_temp = np.load(file, allow_pickle=True).item()
+        self.perturbation.data = torch.from_numpy(delta_and_temp['delta'])
+        self.temperature.data = torch.from_numpy(delta_and_temp['temp'])
+        print('Successfully restore delta and temperature for Neural Clamping.')
+
     def reliability_diagram(self, test_loader, rd_criterion, n_bins=15):
         self.model.eval()
         self.cuda()
