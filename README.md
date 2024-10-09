@@ -18,6 +18,35 @@ What the differnet between Confidence and Accuracy?
 ![image](https://github.com/yungchentang/neural-clamping/blob/main/image/conf_acc_demo_720p_compressed.gif)
 
 
+## Uasge
+Quick Start by running the following code!
+```python
+# !pip install -q git+https://github.com/yungchentang/NCToolkit.git
+from neural_clamping.nc_wrapper import NCWrapper
+from neural_clamping.utils import load_model, load_dataset, model_classes, plot_reliability_diagram
+
+# Load model
+model = load_model(name='ARCHITECTURE', data='DATASET', checkpoint_path='CHECKPOINT_PATH')
+num_classes = model_classes(data='DATASET')
+
+# Dataset loader
+valloader = load_dataset(data='DATASET', split='val', batch_size="BATCH_SIZE")
+testloader = load_dataset(data='DATASET', split='test', batch_size="BATCH_SIZE")
+
+# Build Neural Clamping framework
+nc = NCWrapper(model=model, num_classes=num_classes, ...)
+
+# Calibrated using Neural Clamping
+nc.train_NC(val_loader=valloader, epoch='EPOCH', ...)
+
+# General Evaluation
+nc.test_with_NC(test_loader=testloader)
+
+# Visualization
+bin_acc, conf_axis, ece_score = nc.reliability_diagram(test_loader=testloader, rd_criterion="ECE", n_bins=30)
+plot_reliability_diagram(conf_axis, bin_acc)
+```
+
 ## Citations
 If you find this helpful for your research, please cite our papers as follows:
 
